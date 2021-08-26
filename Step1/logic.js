@@ -1,80 +1,106 @@
-// Map
-var myMap = L.map("map", {
-  center: [36.77, -119.41],
-  zoom: 5
+// queries
+var queryUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson"
+
+var query2 = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojson"
+
+// GET
+d3.json(queryUrl, function(data) {
+  createFeatures(data.features);
 });
 
-// Tile
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-}).addTo(myMap);
+function createFeatures(quakeData) {
 
-var queryUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
-
-// Marker
-function markerSize(quakeMagnitude) {
-    return quakeMagnitude * 5;
-}
-
-// Opacity
-function markerOpacity(quakeMagnitude) {
-  if (quakeMagnitude > 6) {
-    return .9
-  } else if (quakeMagnitude > 5) {
-    return .8
-  } else if (quakeMagnitude > 4) {
-    return .7
-  } else (quakeMagnitude > 3)
-    return .60
+  // Pop ups
+  function onEachFeature(feature, layer) {
+    layer.bindPopup("<h3>" + feature.properties.place +
+      "</h3><hr><p>" + new Date(feature.properties.time) + "</p>" +
+      "</h3><hr><p>Magnitude: " + feature.properties.mag + "</p>");
   }
 
-// Color
-function markerColor(quakeMagnitude) {
-  if (quakeMagnitude > 5) {
-    return 'red'
-  } else if (quakeMagnitude > 4) {
-    return 'orange'
-  } else (quakeMagnitude > 3)
-    return 'yellow'
-  }
-
-// GET request, and function to handle returned JSON data
-d3.json(queryUrl, function(data) {
-  
-  var earthquakes = L.geoJSON(data.features, {
-    onEachFeature : popup,
-    pointToLayer: marker
+  // Marker
+  var quakes = L.geoJSON(quakeData, {
+    onEachFeature: onEachFeature,
+    pointToLayer: function (feature, latlng) {
+      var color;
+      var g = 255;
+      var r= Math.floor(250-75*feature.properties.mag);
+      var b = Math.floor(250-75*feature.properties.mag);
+      color= "rgb("+r+" ,"+g+","+ b+")"
+      
+      var geojsonMarkerOptions = {
+        radius: 5*feature.properties.mag,
+        fillColor: color,
+        color: "black",
+        weight: 1.5,
+        opacity: 1,
+        fillOpacity: 0.6
+      };
+      return L.circleMarker(latlng, geojsonMarkerOptions);
+    }
   });
 
-// call function to create map
-  createMap(earthquakes);
 
-});
+  createMap(quakes);
+  
+}
 
-function marker(feature, location) {
-  var options = {
-    stroke: false,
-    fillOpacity: markerOpacity(feature.properties.mag),
-    color: markerColor(feature.properties.mag),
-    fillColor: markerColor(feature.properties.mag),
-    radius: markerSize(feature.properties.mag)
+function createMap(quakes) {
+
+  // layers
+  var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'})
+
+  var baseMaps = {
+    "Street Map": streets
+  };
+
+  var overlayMaps = {
+    Earthquakes: quakes
+  };
+
+  var myMap = L.map("map", {
+    center: [
+      37.09, -119.4
+    ],
+    zoom: 5,
+    layers: [streets, quakes]
+  });
+
+
+  function getColor(a) {
+      return a < 1 ? 'rgb(0, 153, 51)' :
+            a < 2  ? 'rbg(255,225,225)' :
+            a < 3  ? 'rbg(255,195,195)' :
+            a < 4  ? 'rbg(255,165,165)' :
+            a < 5  ? 'rgb(255,135,135)' :
+            a < 6  ? 'rgb(255,105,105)' :
+            d < 8  ? 'rgb(255,45,45)' :
+            a < 7  ? 'rgb(255,75,75)' :
+            d < 9  ? 'rgb(255,15,15)' :
+            'rgb(255,0,0)';
+        }
+
+  // legend
+  var legend = L.control({position: 'bottomright'});
+
+  legend.onAdd = function (map) {
+  
+      var div = L.DomUtil.create('div', 'info legend'),
+      grades = [0, 1, 2, 3, 4, 5, 6, 7, 8],
+      labels = [];
+
+      div.innerHTML+='Magnitude<br><hr>'
+  
+      // loop
+      for (var i = 0; i < grades.length; i++) {
+          div.innerHTML +=
+              '<i style="background:' + getColor(grades[i] + 1) + '">&nbsp&nbsp&nbsp&nbsp</i> ' +
+              grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
   }
-
-  return L.circleMarker(location, options);
+  
+  return div;
+  };
+  
+  legend.addTo(myMap);
 
 }
-
-// Define a function we want to run once for each feature in the features array
-function popup(feature, layer) {
-  // Give each feature a popup describing the place and time of the earthquake
-  return layer.bindPopup(`<h3> ${feature.properties.place} </h3> <hr> <h4>Magnitude: ${feature.properties.mag} </h4> <p> ${Date(feature.properties.time)} </p>`);
-}
-
-// function to receive a layer of markers and plot them on a map.
-function createMap(earthquakes) {
-
-  var street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-});
-
-}).addTo(myMap);
