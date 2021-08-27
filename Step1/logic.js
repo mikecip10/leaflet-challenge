@@ -1,8 +1,6 @@
 // queries
 var queryUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson"
 
-var query2 = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojson"
-
 // GET
 d3.json(queryUrl, function(data) {
   createFeatures(data.features);
@@ -68,16 +66,16 @@ function createMap(quakes) {
 
 
   function getColor(a) {
-      return a < 1 ? 'rgb(0, 153, 51)' :
-            a < 2  ? 'rbg(255,225,225)' :
-            a < 3  ? 'rbg(255,195,195)' :
-            a < 4  ? 'rbg(255,165,165)' :
-            a < 5  ? 'rgb(255,135,135)' :
-            a < 6  ? 'rgb(255,105,105)' :
-            d < 8  ? 'rgb(255,45,45)' :
-            a < 7  ? 'rgb(255,75,75)' :
-            d < 9  ? 'rgb(255,15,15)' :
-            'rgb(255,0,0)';
+      return a < 1 ? 'rgb(0, 215, 191)' :
+            a < 2  ? 'rbg(0,195,181)' :
+            a < 3  ? 'rbg(0,175,171)' :
+            a < 4  ? 'rbg(0,165,165)' :
+            a < 5  ? 'rgb(0,135,135)' :
+            a < 6  ? 'rgb(0,105,105)' :
+            d < 8  ? 'rgb(0,45,45)' :
+            a < 7  ? 'rgb(0,75,75)' :
+            d < 9  ? 'rgb(0,15,15)' :
+            'rgb(0,0,0)';
         }
 
   // legend
@@ -97,7 +95,9 @@ function createMap(quakes) {
               '<i style="background:' + getColor(grades[i] + 1) + '">&nbsp&nbsp&nbsp&nbsp</i> ' +
               grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
   }
-  
+// Add second query
+  var query2 = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojson"
+
   return div;
   };
   
